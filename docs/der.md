@@ -126,4 +126,6 @@ erDiagram
 - **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma em uma tabela associativa, definida na etapa do Dicionário de Dados.
 - **Atributos `compra` e `produto` em Item da Compra:** no DER original eles já aparecem como atributos; no modelo lógico serão as chaves estrangeiras que ligam o item à compra e ao produto.
 - **Em aberto (não alterado nesta revisão):** a obrigatoriedade das relações Contato → Tarefa e Cliente → Tarefa (uma tarefa pode existir sem contato de origem?) será confirmada quando chegarmos na entidade Tarefa.
-- **Versão anterior:** [`der.png`](der.png) é a primeira versão do diagrama (desenhada em ferramenta visual), sem a entidade `Pet`. Este arquivo passa a ser a referência atual.
+- **Imagem do diagrama:** [`der.png`](der.png) é uma imagem gerada a partir do diagrama deste arquivo, já com a entidade `Pet`. Se o diagrama mudar, este arquivo (`der.md`) é a referência: a imagem deve ser gerada de novo a partir dele.
+
+![DER conceitual](der.png)

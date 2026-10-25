@@ -13,7 +13,7 @@ O sistema referencia o sistema de vendas (PDV/ERP) já existente na loja, sem du
 - [Roadmap](docs/roadmap.md)
 - [Fluxo de Uso](docs/fluxo-de-uso.md)
 - [Modelo de Domínio](docs/modelo-de-dominio.md)
-- [DER Conceitual](docs/der.md) *(a primeira versão, sem Pet, está em [der.png](docs/der.png))*
+- [DER Conceitual](docs/der.md) *(também disponível como imagem: [der.png](docs/der.png))*
 - Dicionário de Dados — em construção
 
 ## Status atual
