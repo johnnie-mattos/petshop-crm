@@ -14,7 +14,7 @@ Cada pet é registrado individualmente e pertence a um único cliente.
 
 **Dados de cada pet:**
 
-- nome;
+- nome — *opcional*;
 - espécie (cachorro, gato, ave etc.) — *opcional*;
 - raça — *opcional*;
 - porte — *opcional*;
@@ -28,9 +28,9 @@ Cada pet é registrado individualmente e pertence a um único cliente.
 - A **quantidade de pets** de um cliente não é digitada: o sistema a calcula contando os pets cadastrados daquele cliente. Assim, o número nunca fica diferente da lista real de pets.
 - Um pet que deixa de ser atendido não é apagado: é marcado como inativo, preservando o histórico (mesmo princípio já adotado para Funcionário, Produto Referência e Promoção).
 
-**Decisão sobre obrigatoriedade:** espécie, raça, porte e data de nascimento são sempre **opcionais**. O pet shop atende tutores com perfis muito diferentes: nem todo tutor sabe a raça ou a data de nascimento do animal, e o cadastro não pode travar por falta de uma informação. Esses dados servem para segmentar contatos e promoções quando existem, mas o sistema funciona sem eles.
+**Decisão sobre obrigatoriedade:** nenhum dado digitado do pet é obrigatório (nome, espécie, raça, porte, data de nascimento e observações são todos **opcionais**). O pet shop atende tutores com perfis muito diferentes: nem todo tutor sabe a raça ou a data de nascimento do animal, e o cadastro não pode travar por falta de uma informação. Esses dados servem para segmentar contatos e promoções quando existem, mas o sistema funciona sem eles.
 
-> A obrigatoriedade dos demais campos (por exemplo, o nome do pet) será definida na etapa do Dicionário de Dados (modelo lógico).
+As únicas exigências são técnicas e não dependem de digitação: o pet precisa estar ligado a um cliente (regra "um pet sempre pertence a exatamente um cliente") e a situação (ativo/inativo) começa como "ativo" automaticamente. Detalhes no [Dicionário de Dados](dicionario-de-dados.md).
 
 ## Evolução futura
 
@@ -42,3 +42,4 @@ Planner integrado às demais funções, facilitando o planejamento semanal do at
 |---|---|
 | 2026-10-24 | Entidade `Pet` incorporada ao modelo (relação 1:N com Cliente). Requisito "quantidade e nome dos pets" detalhado em "Cadastro de pets". Pendência anterior encerrada. |
 | 2026-10-24 | Espécie, raça, porte e data de nascimento do pet definidos como opcionais, para acomodar tutores com perfis diversos. |
+| 2026-10-25 | Nome do pet também definido como opcional: nenhum dado digitado do pet é obrigatório, para o cadastro não travar nenhum processo. |

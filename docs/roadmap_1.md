@@ -9,7 +9,7 @@
 - [ ] Login
 - [x] Banco de dados
   - [x] DER conceitual
-  - [ ] Dicionário de dados (modelo lógico) — em andamento
+  - [ ] Dicionário de dados (modelo lógico) — em andamento (Cliente, Funcionário e Pet concluídos)
   - [ ] Script SQL de criação das tabelas
 - [ ] API
 - [ ] Frontend

@@ -4,7 +4,7 @@ Versão atual, **com a entidade `Pet`**. O diagrama usa a sintaxe [Mermaid](http
 
 **Como ler a notação de cardinalidade:** `||` = exatamente um · `o|` = zero ou um · `o{` = zero ou muitos · `|{` = um ou muitos.
 
-> Os tipos mostrados (`numero`, `texto`, `data`, `logico`) são genéricos, de propósito: os tipos exatos do PostgreSQL (`VARCHAR`, `NUMERIC`, `TIMESTAMP`...) são definidos na etapa seguinte, no Dicionário de Dados.
+> Os tipos mostrados (`numero`, `texto`, `data`, `logico`) são genéricos, de propósito: os tipos exatos do PostgreSQL (`VARCHAR`, `NUMERIC`, `TIMESTAMPTZ`...) são definidos na etapa seguinte, no Dicionário de Dados.
 
 ```mermaid
 erDiagram
@@ -122,7 +122,7 @@ erDiagram
 ## Notas
 
 - **O que mudou nesta versão:** entidade `Pet` e relacionamento Cliente 1:N Pet. Padronizado o nome `Tarefas` → `Tarefa` (singular, como as demais entidades). A relação Compra → Item da Compra passou a `|{` (um ou muitos), fiel ao DER original, em que uma compra sempre tem ao menos um item.
-- **Atributos opcionais do Pet:** `especie`, `raca`, `porte` e `data_de_nascimento` são sempre opcionais (ver [Requisitos](requisitos.md)). O DER conceitual não mostra obrigatoriedade; ela é registrada no Dicionário de Dados.
+- **Atributos opcionais do Pet:** `nome`, `especie`, `raca`, `porte`, `data_de_nascimento` e `observacoes` são opcionais (ver [Requisitos](requisitos.md)). O DER conceitual não mostra obrigatoriedade; ela é registrada no [Dicionário de Dados](dicionario-de-dados.md).
 - **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma em uma tabela associativa, definida na etapa do Dicionário de Dados.
 - **Atributos `compra` e `produto` em Item da Compra:** no DER original eles já aparecem como atributos; no modelo lógico serão as chaves estrangeiras que ligam o item à compra e ao produto.
 - **Em aberto (não alterado nesta revisão):** a obrigatoriedade das relações Contato → Tarefa e Cliente → Tarefa (uma tarefa pode existir sem contato de origem?) será confirmada quando chegarmos na entidade Tarefa.
