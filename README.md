@@ -14,11 +14,11 @@ O sistema referencia o sistema de vendas (PDV/ERP) já existente na loja, sem du
 - [Fluxo de Uso](docs/fluxo-de-uso.md)
 - [Modelo de Domínio](docs/modelo-de-dominio.md)
 - [DER Conceitual](docs/der.md) *(também disponível como imagem: [der.png](docs/der.png))*
-- Dicionário de Dados — em construção
+- [Dicionário de Dados](docs/dicionario-de-dados.md) *(modelo lógico — em construção)*
 
 ## Status atual
 
-Em fase de modelagem de dados: DER conceitual definido (incluindo a entidade Pet), dicionário de dados (modelo lógico) em construção, entidade por entidade. Entidades já detalhadas no dicionário: Cliente e Funcionário.
+Em fase de modelagem de dados: DER conceitual definido (incluindo a entidade Pet), dicionário de dados (modelo lógico) em construção, entidade por entidade. Entidades já detalhadas no dicionário: Cliente, Funcionário e Pet.
 
 ## Stack (planejada)
 
