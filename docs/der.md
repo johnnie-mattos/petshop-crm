@@ -123,7 +123,7 @@ erDiagram
 
 - **O que mudou nesta versão:** entidade `Pet` e relacionamento Cliente 1:N Pet. Padronizado o nome `Tarefas` → `Tarefa` (singular, como as demais entidades). A relação Compra → Item da Compra passou a `|{` (um ou muitos), fiel ao DER original, em que uma compra sempre tem ao menos um item.
 - **Atributos opcionais do Pet:** `nome`, `especie`, `raca`, `porte`, `data_de_nascimento` e `observacoes` são opcionais (ver [Requisitos](requisitos.md)). O DER conceitual não mostra obrigatoriedade; ela é registrada no [Dicionário de Dados](dicionario-de-dados.md).
-- **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma em uma tabela associativa, definida na etapa do Dicionário de Dados.
+- **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma na tabela associativa `produto_promocao`, definida no [Dicionário de Dados](dicionario-de-dados.md). A primeira versão do desenho indicava "zero ou um" no lado Promoção; a cardinalidade correta é "zero ou muitos" nos dois lados, pois um produto pode participar de várias promoções ao longo do tempo.
 - **Atributos `compra` e `produto` em Item da Compra:** no DER original eles já aparecem como atributos; no modelo lógico serão as chaves estrangeiras que ligam o item à compra e ao produto.
 - **Em aberto (não alterado nesta revisão):** a obrigatoriedade das relações Contato → Tarefa e Cliente → Tarefa (uma tarefa pode existir sem contato de origem?) será confirmada quando chegarmos na entidade Tarefa.
 - **Imagem do diagrama:** [`der.png`](der.png) é uma imagem gerada a partir do diagrama deste arquivo, já com a entidade `Pet`. Se o diagrama mudar, este arquivo (`der.md`) é a referência: a imagem deve ser gerada de novo a partir dele.
