@@ -15,6 +15,7 @@ O sistema referencia o sistema de vendas (PDV/ERP) já existente na loja, sem du
 - [Modelo de Domínio](docs/modelo-de-dominio.md)
 - [DER Conceitual](docs/der.md) *(também disponível como imagem: [der.png](docs/der.png))*
 - [Dicionário de Dados](docs/dicionario-de-dados.md) *(modelo lógico — em construção)*
+- [Guia de contribuição](CONTRIBUTING.md) *(fluxo de trabalho e padrão de commits)*
 
 ## Status atual
 
