@@ -44,7 +44,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 1. Cliente
 - [x] 2. Funcionário
 - [x] 3. Pet *(depende de Cliente)*
-- [ ] 4. Produto Referência
+- [x] 4. Produto Referência
 - [ ] 5. Promoção
 - [ ] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
 - [ ] 7. Compra *(depende de Cliente e Funcionário)*
@@ -123,6 +123,32 @@ Relacionamento do DER: **Cliente 1:N Pet**. A entidade evita armazenar uma lista
 
 ---
 
+## 4. Produto Referência — tabela `produto_referencia`
+
+Catálogo de consulta dos produtos vendidos. O sistema de vendas (Open) permanece como fonte oficial de preço e estoque; esta tabela mantém uma cópia de referência para uso no CRM. Não possui chaves estrangeiras: a relação com Item da Compra (1:N) é mantida em `item_da_compra`, e a relação com Promoção (N:N) em tabela associativa.
+
+**Decisões de modelagem**
+
+- `codigo` é obrigatório e `UNIQUE`: é o identificador do produto no Open, e impede o cadastro duplicado do mesmo produto. Armazenado como texto, para preservar zeros à esquerda e letras.
+- `preco` é `NUMERIC(10,2)` (valor exato, sem arredondamento binário) e opcional: a ausência de preço não impede a operação do sistema. `CHECK (preco >= 0)` impede valores negativos.
+- `categoria` e `marca` são texto livre, conforme o DER. A padronização dos valores é responsabilidade da aplicação. Evolução possível: tabelas próprias de categoria e marca, referenciadas por chave estrangeira, caso a inconsistência de digitação se torne um problema.
+- O preço praticado em cada venda é registrado em `item_da_compra.valor_unitario`; alterações em `preco` não afetam o histórico de compras.
+- `atualizado_em` recebe `DEFAULT CURRENT_TIMESTAMP` no `INSERT`. A atualização nos `UPDATE` é responsabilidade da aplicação (ou de *trigger*).
+- `ativo` é `NOT NULL` com `DEFAULT TRUE`; o produto é desativado, não excluído.
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Produto Referência | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Produto Referência | `nome` | VARCHAR(200) | Sim | - | Nome completo do produto |
+| Produto Referência | `categoria` | VARCHAR(80) | Não | - | Texto livre (ração, brinquedo, medicamento...) |
+| Produto Referência | `marca` | VARCHAR(80) | Não | - | Texto livre |
+| Produto Referência | `preco` | NUMERIC(10,2) | Não | - | Cópia de referência do preço do Open; `CHECK (preco >= 0)` |
+| Produto Referência | `codigo` | VARCHAR(50) | Sim | UNIQUE | Código do produto no Open; texto |
+| Produto Referência | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir |
+| Produto Referência | `atualizado_em` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -132,3 +158,4 @@ Relacionamento do DER: **Cliente 1:N Pet**. A entidade evita armazenar uma lista
 | 2026-10-25 | Pet | Todos os atributos digitados definidos como opcionais | O cadastro não deve ser bloqueado por informação ausente |
 | 2026-10-25 | Cliente | `data_de_cadastro`: `TIMESTAMP` → `TIMESTAMPTZ` | Armazenar o instante exato, com fuso horário |
 | 2026-10-25 | Funcionário | `cargo`: obrigatório → opcional | Nenhum processo depende do cargo |
+| 2026-10-27 | Produto Referência | Entidade registrada; `codigo` obrigatório e único, `preco` opcional | `codigo` é o elo com o Open e evita duplicidade; `preco` não é essencial à operação |
