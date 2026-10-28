@@ -20,7 +20,7 @@ Cada atributo é definido pela aplicação dos cinco critérios abaixo.
 
 - **Tabelas:** singular, minúsculas, sem acento e sem espaço (`cliente`, `funcionario`, `pet`).
 - **Colunas:** `snake_case`, sem acento (`data_de_cadastro`, `observacoes`).
-- **Chave primária:** coluna `id` do tipo `BIGSERIAL`.
+- **Chave primária:** coluna `id` do tipo `BIGSERIAL`. Exceção: tabelas associativas (relacionamentos N:N sem atributos próprios) usam chave primária composta pelas duas chaves estrangeiras.
 - **Chave estrangeira:** nome da tabela referenciada + `_id`, tipo `BIGINT` (ex.: `cliente_id`). O tipo é `BIGINT` porque `BIGSERIAL` é um atalho para `BIGINT` com sequência automática.
 - **Coluna "Obrigatório":** `Sim` equivale a `NOT NULL`; `Não` aceita `NULL`.
 - **Desativação em vez de exclusão:** entidades que deixam de ser utilizadas (funcionário, pet, produto, promoção) possuem coluna booleana (`ativo`/`ativa`), preservando o histórico.
@@ -46,7 +46,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 3. Pet *(depende de Cliente)*
 - [x] 4. Produto Referência
 - [x] 5. Promoção
-- [ ] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
+- [x] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
 - [ ] 7. Compra *(depende de Cliente e Funcionário)*
 - [ ] 8. Item da Compra *(depende de Compra e Produto Referência)*
 - [ ] 9. Contato *(depende de Cliente e Funcionário)*
@@ -174,6 +174,24 @@ Campanha promocional que pode envolver vários produtos. Não possui chaves estr
 
 ---
 
+## 6. Produto × Promoção — tabela `produto_promocao`
+
+Tabela associativa do relacionamento **Produto Referência N:N Promoção** (zero ou muitos nos dois lados). Cada linha representa o vínculo "este produto participa desta promoção". Uma promoção pode existir sem produtos vinculados, e um produto pode não estar em nenhuma promoção.
+
+**Decisões de modelagem**
+
+- A chave primária é composta por `produto_referencia_id` e `promocao_id`: cada coluna pode se repetir, mas o par não. Isso impede vincular o mesmo produto duas vezes à mesma promoção.
+- Ambas as colunas são chaves estrangeiras obrigatórias, com `ON DELETE RESTRICT`: não é possível excluir um produto ou uma promoção que ainda possua vínculos. Remover um produto de uma promoção corresponde a excluir a linha desta tabela.
+- A tabela não possui atributos próprios: o desconto é definido por promoção (`promocao.percentual_de_desconto`) e vale para todos os seus produtos. Caso passe a ser necessário um preço ou desconto específico por produto, a coluna correspondente é acrescentada a esta tabela.
+- Índice adicional em `promocao_id` (consulta dos produtos de uma promoção, como no encarte): a ser definido no script SQL.
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Produto × Promoção | `produto_referencia_id` | BIGINT | Sim | PK composta; FK → `produto_referencia.id` | `ON DELETE RESTRICT` |
+| Produto × Promoção | `promocao_id` | BIGINT | Sim | PK composta; FK → `promocao.id` | `ON DELETE RESTRICT` |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -185,3 +203,4 @@ Campanha promocional que pode envolver vários produtos. Não possui chaves estr
 | 2026-10-25 | Funcionário | `cargo`: obrigatório → opcional | Nenhum processo depende do cargo |
 | 2026-10-27 | Produto Referência | Entidade registrada; `codigo` obrigatório e único, `preco` opcional | `codigo` é o elo com o Open e evita duplicidade; `preco` não é essencial à operação |
 | 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
+| 2026-10-28 | Produto × Promoção | Tabela associativa registrada, com chave primária composta e sem atributos próprios | Representar o relacionamento N:N entre Produto Referência e Promoção |
