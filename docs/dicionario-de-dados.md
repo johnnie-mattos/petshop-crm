@@ -45,7 +45,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 2. Funcionário
 - [x] 3. Pet *(depende de Cliente)*
 - [x] 4. Produto Referência
-- [ ] 5. Promoção
+- [x] 5. Promoção
 - [ ] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
 - [ ] 7. Compra *(depende de Cliente e Funcionário)*
 - [ ] 8. Item da Compra *(depende de Compra e Produto Referência)*
@@ -149,6 +149,31 @@ Catálogo de consulta dos produtos vendidos. O sistema de vendas (Open) permanec
 
 ---
 
+## 5. Promoção — tabela `promocao`
+
+Campanha promocional que pode envolver vários produtos. Não possui chaves estrangeiras: a relação N:N com Produto Referência é mantida em tabela associativa.
+
+**Decisões de modelagem**
+
+- `nome` e `data_de_inicio` são obrigatórios: o fluxo de contato ("produto entrou em promoção") e o encarte dependem de situar a promoção no tempo, e o nome identifica a campanha.
+- `data_de_inicio` e `data_de_termino` são `DATE`: a vigência é medida em dias.
+- `data_de_termino` é opcional: `NULL` indica promoção sem data de término definida. `CHECK (data_de_termino >= data_de_inicio)` impede término anterior ao início.
+- `percentual_de_desconto` é opcional, `NUMERIC(5,2)`, com `CHECK (percentual_de_desconto BETWEEN 0 AND 100)`. Promoções que não são percentuais (ex.: "leve 3, pague 2") são descritas em `descricao`.
+- `ativa` é uma chave manual de ativação, `NOT NULL` com `DEFAULT TRUE`, que permite suspender a promoção antes do término.
+- A vigência não é armazenada: é calculada na consulta. Promoção vigente = `ativa = TRUE` e a data atual entre `data_de_inicio` e `data_de_termino` (ou `data_de_termino` nula).
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Promoção | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Promoção | `nome` | VARCHAR(120) | Sim | - | Identifica a campanha (ex.: "Semana do Banho") |
+| Promoção | `data_de_inicio` | DATE | Sim | - | Primeiro dia de vigência |
+| Promoção | `data_de_termino` | DATE | Não | - | `NULL` = sem data de término definida; `CHECK (data_de_termino >= data_de_inicio)` |
+| Promoção | `descricao` | TEXT | Não | - | Detalhes da campanha |
+| Promoção | `percentual_de_desconto` | NUMERIC(5,2) | Não | - | `CHECK (percentual_de_desconto BETWEEN 0 AND 100)` |
+| Promoção | `ativa` | BOOLEAN | Sim | - | `DEFAULT TRUE`; chave manual de suspensão |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -159,3 +184,4 @@ Catálogo de consulta dos produtos vendidos. O sistema de vendas (Open) permanec
 | 2026-10-25 | Cliente | `data_de_cadastro`: `TIMESTAMP` → `TIMESTAMPTZ` | Armazenar o instante exato, com fuso horário |
 | 2026-10-25 | Funcionário | `cargo`: obrigatório → opcional | Nenhum processo depende do cargo |
 | 2026-10-27 | Produto Referência | Entidade registrada; `codigo` obrigatório e único, `preco` opcional | `codigo` é o elo com o Open e evita duplicidade; `preco` não é essencial à operação |
+| 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
