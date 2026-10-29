@@ -47,7 +47,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 4. Produto Referência
 - [x] 5. Promoção
 - [x] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
-- [ ] 7. Compra *(depende de Cliente e Funcionário)*
+- [x] 7. Compra *(depende de Cliente e Funcionário)*
 - [ ] 8. Item da Compra *(depende de Compra e Produto Referência)*
 - [ ] 9. Contato *(depende de Cliente e Funcionário)*
 - [ ] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
@@ -192,6 +192,34 @@ Tabela associativa do relacionamento **Produto Referência N:N Promoção** (zer
 
 ---
 
+## 7. Compra — tabela `compra`
+
+Venda realizada no sistema Open, registrada no CRM por referência, para formar o histórico de compras do cliente. Relacionamentos do DER: **Cliente 1:N Compra**, **Funcionário 1:N Compra** e **Compra 1:N Item da Compra** (a chave estrangeira desta última fica em `item_da_compra`).
+
+**Decisões de modelagem**
+
+- `cliente_id` e `funcionario_id` são obrigatórios, conforme o DER (cada compra tem exatamente um cliente e exatamente um vendedor). Sem cliente não há histórico nem contato; o vendedor responsável deve ser sempre identificado, para apuração de resultados por vendedor. Ambas usam `ON DELETE RESTRICT`: cliente e funcionário com compras registradas não podem ser excluídos, e o funcionário que sai da loja é desativado (`ativo = FALSE`), preservando o histórico de vendas.
+- Cada compra tem um único vendedor. Caso futuramente uma venda precise ser compartilhada entre vendedores, o relacionamento passa a N:N e exige tabela associativa.
+- `data_da_compra` corresponde ao atributo `data` do DER. O nome descritivo evita ambiguidade com os atributos `data` de Contato e Tarefa. É `TIMESTAMPTZ` (data e hora), com `DEFAULT CURRENT_TIMESTAMP`.
+- `valor_total` é armazenado, conforme o DER. Representa o total oficial da venda no Open e pode diferir da soma dos itens (descontos e arredondamentos). É preenchido pelo sistema, não digitado. `CHECK (valor_total >= 0)`.
+- `forma_de_pagamento` é opcional e de texto livre: nenhum processo depende dela.
+- `codigo_externo` é opcional e `UNIQUE`: identificador da venda no Open. Permite localizar a venda de origem e evitar o registro duplicado da mesma venda na importação. Atributo acrescentado ao DER (não previsto na primeira versão).
+- A regra "toda compra possui ao menos um item" não é imposta pelo banco: é garantida pela aplicação, que registra a compra e seus itens na mesma transação.
+- `atualizado_em` recebe `DEFAULT CURRENT_TIMESTAMP` no `INSERT`; a atualização nos `UPDATE` é responsabilidade da aplicação (ou de *trigger*).
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Compra | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Compra | `cliente_id` | BIGINT | Sim | FK → `cliente.id` | `ON DELETE RESTRICT`; preenchido pelo sistema |
+| Compra | `funcionario_id` | BIGINT | Sim | FK → `funcionario.id` | `ON DELETE RESTRICT`; vendedor responsável |
+| Compra | `data_da_compra` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` (DER: `data`) |
+| Compra | `valor_total` | NUMERIC(10,2) | Sim | - | `CHECK (valor_total >= 0)`; total oficial da venda; preenchido pelo sistema |
+| Compra | `forma_de_pagamento` | VARCHAR(30) | Não | - | Texto livre (dinheiro, pix, cartão...) |
+| Compra | `codigo_externo` | VARCHAR(50) | Não | UNIQUE | Identificador da venda no Open |
+| Compra | `atualizado_em` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -204,3 +232,4 @@ Tabela associativa do relacionamento **Produto Referência N:N Promoção** (zer
 | 2026-10-27 | Produto Referência | Entidade registrada; `codigo` obrigatório e único, `preco` opcional | `codigo` é o elo com o Open e evita duplicidade; `preco` não é essencial à operação |
 | 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
 | 2026-10-28 | Produto × Promoção | Tabela associativa registrada, com chave primária composta e sem atributos próprios | Representar o relacionamento N:N entre Produto Referência e Promoção |
+| 2026-10-28 | Compra | Entidade registrada; acrescentado `codigo_externo` (não previsto no DER); `data` renomeado para `data_da_compra` | Permitir a ligação e a deduplicação com as vendas do Open; evitar ambiguidade entre atributos `data` |
