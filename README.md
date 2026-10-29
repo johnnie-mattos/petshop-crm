@@ -19,7 +19,7 @@ O sistema referencia o sistema de vendas (PDV/ERP) já existente na loja, sem du
 
 ## Status atual
 
-Em fase de modelagem de dados: DER conceitual definido (incluindo a entidade Pet), dicionário de dados (modelo lógico) em construção, entidade por entidade. Entidades já detalhadas no dicionário: Cliente, Funcionário e Pet.
+Em fase de modelagem de dados: DER conceitual definido (incluindo a entidade Pet), dicionário de dados (modelo lógico) em construção, entidade por entidade. O andamento por entidade está no quadro "Andamento" do [Dicionário de Dados](docs/dicionario-de-dados.md).
 
 ## Stack (planejada)
 
