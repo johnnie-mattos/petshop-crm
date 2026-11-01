@@ -24,7 +24,7 @@ Cada atributo é definido pela aplicação dos cinco critérios abaixo.
 - **Chave estrangeira:** nome da tabela referenciada + `_id`, tipo `BIGINT` (ex.: `cliente_id`). O tipo é `BIGINT` porque `BIGSERIAL` é um atalho para `BIGINT` com sequência automática.
 - **Coluna "Obrigatório":** `Sim` equivale a `NOT NULL`; `Não` aceita `NULL`.
 - **Desativação em vez de exclusão:** entidades que deixam de ser utilizadas (funcionário, pet, produto, promoção) possuem coluna booleana (`ativo`/`ativa`), preservando o histórico.
-- **Integridade referencial:** chaves estrangeiras usam `ON DELETE RESTRICT`, que impede excluir um registro ainda referenciado por outro.
+- **Integridade referencial:** chaves estrangeiras usam `ON DELETE RESTRICT`, que impede excluir um registro ainda referenciado por outro. Exceção: a chave estrangeira de uma entidade que é parte de outra, apontando para o todo (`item_da_compra.compra_id`), usa `ON DELETE CASCADE`, pois a parte não existe sem o todo.
 
 ## Glossário
 
@@ -48,7 +48,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 5. Promoção
 - [x] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
 - [x] 7. Compra *(depende de Cliente e Funcionário)*
-- [ ] 8. Item da Compra *(depende de Compra e Produto Referência)*
+- [x] 8. Item da Compra *(depende de Compra e Produto Referência)*
 - [ ] 9. Contato *(depende de Cliente e Funcionário)*
 - [ ] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
 - [ ] 11. Dicionário consolidado
@@ -220,6 +220,32 @@ Venda realizada no sistema Open, registrada no CRM por referência, para formar 
 
 ---
 
+## 8. Item da Compra — tabela `item_da_compra`
+
+Linha de produto de uma compra. Relacionamentos do DER: **Compra 1:N Item da Compra** e **Produto Referência 1:N Item da Compra**. Na prática, é a tabela associativa do relacionamento N:N entre Compra e Produto Referência, com atributos próprios (quantidade, valor unitário e desconto).
+
+**Decisões de modelagem**
+
+- O item é parte da compra: `compra_id` é obrigatória e usa `ON DELETE CASCADE` (excluir uma compra exclui seus itens). O produto é apenas referenciado: `produto_referencia_id` é obrigatória e usa `ON DELETE RESTRICT`.
+- A chave primária é um `id` próprio, e não composta, porque o mesmo produto pode aparecer mais de uma vez na mesma compra (por exemplo, com valores diferentes).
+- `quantidade` é `NUMERIC(10,3)`: aceita quantidades fracionadas (produtos vendidos por peso). `CHECK (quantidade > 0)`.
+- `valor_unitario` é o valor efetivamente praticado por unidade na venda, antes do desconto do item. É independente de `produto_referencia.preco`: reajustes posteriores não alteram o histórico. Quando o preço já foi reduzido na origem, `valor_unitario` já reflete o valor reduzido.
+- `desconto` é o valor total do desconto do item, em reais, já resolvido. Descontos por percentual, por valor fixo ou condicionais (ex.: a partir da terceira unidade) são convertidos em valor antes do registro: o modelo registra o resultado, não a regra de cálculo. É `NOT NULL` com `DEFAULT 0`, pois um valor nulo anularia cálculos que o utilizam. A validação de que o desconto não excede o valor bruto do item é responsabilidade da aplicação.
+- Descontos aplicados sobre o total da venda não são distribuídos entre os itens: refletem-se em `compra.valor_total`.
+- O subtotal do item não é armazenado: é calculado como `quantidade × valor_unitario − desconto`.
+- Índices em `compra_id` e `produto_referencia_id`: a definir no script SQL.
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Item da Compra | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Item da Compra | `compra_id` | BIGINT | Sim | FK → `compra.id` | `ON DELETE CASCADE`; preenchido pelo sistema (DER: `compra`) |
+| Item da Compra | `produto_referencia_id` | BIGINT | Sim | FK → `produto_referencia.id` | `ON DELETE RESTRICT`; preenchido pelo sistema (DER: `produto`) |
+| Item da Compra | `quantidade` | NUMERIC(10,3) | Sim | - | `CHECK (quantidade > 0)`; aceita fração (ex.: 1,500 kg) |
+| Item da Compra | `valor_unitario` | NUMERIC(10,2) | Sim | - | `CHECK (valor_unitario >= 0)`; valor praticado por unidade na venda |
+| Item da Compra | `desconto` | NUMERIC(10,2) | Sim | - | `DEFAULT 0`; `CHECK (desconto >= 0)`; valor total do desconto do item, em reais |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -233,3 +259,4 @@ Venda realizada no sistema Open, registrada no CRM por referência, para formar 
 | 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
 | 2026-10-28 | Produto × Promoção | Tabela associativa registrada, com chave primária composta e sem atributos próprios | Representar o relacionamento N:N entre Produto Referência e Promoção |
 | 2026-10-28 | Compra | Entidade registrada; acrescentado `codigo_externo` (não previsto no DER); `data` renomeado para `data_da_compra` | Permitir a ligação e a deduplicação com as vendas do Open; evitar ambiguidade entre atributos `data` |
+| 2026-10-29 | Item da Compra | Entidade registrada; `quantidade` fracionada; `desconto` como valor em reais já resolvido; `compra_id` com `ON DELETE CASCADE` (nova exceção na convenção) | Produtos vendidos por peso; descontos de origens variadas (percentual, valor fixo, condicional) reduzidos a um único valor; item é parte da compra |
