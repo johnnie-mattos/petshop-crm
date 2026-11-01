@@ -49,7 +49,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 6. Tabela associativa Produto Referência × Promoção *(depende de 4 e 5)*
 - [x] 7. Compra *(depende de Cliente e Funcionário)*
 - [x] 8. Item da Compra *(depende de Compra e Produto Referência)*
-- [ ] 9. Contato *(depende de Cliente e Funcionário)*
+- [x] 9. Contato *(depende de Cliente e Funcionário)*
 - [ ] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
 - [ ] 11. Dicionário consolidado
 
@@ -246,6 +246,52 @@ Linha de produto de uma compra. Relacionamentos do DER: **Compra 1:N Item da Com
 
 ---
 
+## 9. Contato — tabela `contato`
+
+Lembrete ou oportunidade de contato com um cliente, criado automaticamente pelas regras do sistema (ex.: cliente sem comprar há 30 dias; produto em promoção) ou manualmente. Relacionamentos do DER: **Cliente 1:N Contato**, **Funcionário 1:N Contato** e **Contato 1:N Tarefa** (a chave estrangeira desta última fica em `tarefa`).
+
+**Decisões de modelagem**
+
+- `cliente_id` é obrigatória: todo contato é dirigido a exatamente um cliente. Usa `ON DELETE RESTRICT`.
+- `funcionario_id` é **opcional**, divergindo da primeira versão do DER (que indicava exatamente um funcionário). O contato é criado automaticamente pelo sistema, sem responsável; a coluna permanece `NULL` até um funcionário executar o contato, e passa a identificar quem o realizou. Usa `ON DELETE RESTRICT`.
+- `data_do_contato` corresponde ao atributo `data` do DER e indica o **dia em que o contato deve ser feito**. É `DATE`, com `DEFAULT CURRENT_DATE`, e sustenta a tela de contatos do dia.
+- `realizado_em` (acrescentada) registra o instante em que o contato foi executado. Permanece `NULL` enquanto o contato está pendente. O preenchimento é responsabilidade da aplicação, junto com `funcionario_id` e `status`.
+- `status` é `NOT NULL` com `DEFAULT 'pendente'` e restrito por `CHECK` a uma lista fechada de valores, pois consultas do sistema dependem dele. Valores armazenados em minúsculas, sem acento e sem espaço; a aplicação define o rótulo exibido.
+- `motivo` é opcional: preenchido pelas regras nos contatos automáticos, sem bloquear contatos manuais.
+- Inclusão de novos status: ver [Alteração da lista de status](#alteração-da-lista-de-status).
+
+| Valor de `status` | Significado |
+|---|---|
+| `pendente` | Contato a ser realizado (estado inicial) |
+| `realizado` | Contato realizado com o cliente |
+| `nao_atendeu` | Tentativa realizada, sem contato com o cliente |
+| `cancelado` | Contato dispensado (ex.: o cliente voltou a comprar) |
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Contato | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Contato | `cliente_id` | BIGINT | Sim | FK → `cliente.id` | `ON DELETE RESTRICT`; preenchido pelo sistema |
+| Contato | `funcionario_id` | BIGINT | Não | FK → `funcionario.id` | `ON DELETE RESTRICT`; `NULL` até a execução; identifica quem realizou o contato |
+| Contato | `data_do_contato` | DATE | Sim | - | `DEFAULT CURRENT_DATE`; dia em que o contato deve ser feito (DER: `data`) |
+| Contato | `realizado_em` | TIMESTAMPTZ | Não | - | `NULL` enquanto pendente; instante da execução |
+| Contato | `motivo` | VARCHAR(200) | Não | - | Ex.: "30 dias sem compra"; preenchido pelas regras |
+| Contato | `status` | VARCHAR(20) | Sim | - | `DEFAULT 'pendente'`; `CHECK (status IN ('pendente', 'realizado', 'nao_atendeu', 'cancelado'))` |
+| Contato | `observacoes` | TEXT | Não | - | Resultado da conversa, anotações |
+
+### Alteração da lista de status
+
+A lista é definida por uma restrição `CHECK`, que pode ser substituída sem perda de dados:
+
+```sql
+ALTER TABLE contato DROP CONSTRAINT contato_status_check;
+ALTER TABLE contato ADD CONSTRAINT contato_status_check
+    CHECK (status IN ('pendente', 'realizado', 'nao_atendeu', 'cancelado', 'novo_status'));
+```
+
+Acrescentar um valor não afeta os registros existentes. Remover um valor exige antes atualizar os registros que o utilizam. A aplicação deve ser atualizada junto com o banco.
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -259,4 +305,5 @@ Linha de produto de uma compra. Relacionamentos do DER: **Compra 1:N Item da Com
 | 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
 | 2026-10-28 | Produto × Promoção | Tabela associativa registrada, com chave primária composta e sem atributos próprios | Representar o relacionamento N:N entre Produto Referência e Promoção |
 | 2026-10-28 | Compra | Entidade registrada; acrescentado `codigo_externo` (não previsto no DER); `data` renomeado para `data_da_compra` | Permitir a ligação e a deduplicação com as vendas do Open; evitar ambiguidade entre atributos `data` |
+| 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
 | 2026-10-29 | Item da Compra | Entidade registrada; `quantidade` fracionada; `desconto` como valor em reais já resolvido; `compra_id` com `ON DELETE CASCADE` (nova exceção na convenção) | Produtos vendidos por peso; descontos de origens variadas (percentual, valor fixo, condicional) reduzidos a um único valor; item é parte da compra |
