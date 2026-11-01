@@ -15,7 +15,7 @@ erDiagram
     PRODUTO_REFERENCIA ||--o{ ITEM_DA_COMPRA : "referenciado em"
     PRODUTO_REFERENCIA }o--o{ PROMOCAO : "participa de"
     CLIENTE ||--o{ CONTATO : "recebe"
-    FUNCIONARIO ||--o{ CONTATO : "registra"
+    FUNCIONARIO |o--o{ CONTATO : "atende (opcional)"
     CONTATO ||--o{ TAREFA : "pode gerar"
     FUNCIONARIO ||--o{ TAREFA : "executa"
     CLIENTE |o--o{ TAREFA : "relacionada a (opcional)"
@@ -90,6 +90,7 @@ erDiagram
     CONTATO {
         numero id PK
         data data
+        data realizado_em
         texto motivo
         texto status
         texto observacoes
@@ -126,6 +127,7 @@ erDiagram
 - **Atributos opcionais do Pet:** `nome`, `especie`, `raca`, `porte`, `data_de_nascimento` e `observacoes` são opcionais (ver [Requisitos](requisitos.md)). O DER conceitual não mostra obrigatoriedade; ela é registrada no [Dicionário de Dados](dicionario-de-dados.md).
 - **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma na tabela associativa `produto_promocao`, definida no [Dicionário de Dados](dicionario-de-dados.md). A primeira versão do desenho indicava "zero ou um" no lado Promoção; a cardinalidade correta é "zero ou muitos" nos dois lados, pois um produto pode participar de várias promoções ao longo do tempo.
 - **Atributo `codigo_externo` em Compra (acrescentado):** identificador da venda no sistema Open, que permite referenciar a venda de origem e evitar registros duplicados. Não constava na primeira versão do DER.
+- **Funcionário opcional em Contato:** o contato é criado automaticamente pelas regras do sistema, sem responsável; o funcionário passa a ser registrado quando executa o contato. A primeira versão do desenho indicava exatamente um funcionário. Atributo `realizado_em` acrescentado (instante da execução); `data` indica o dia previsto do contato.
 - **Atributos `compra` e `produto` em Item da Compra:** no DER original eles já aparecem como atributos; no modelo lógico serão as chaves estrangeiras que ligam o item à compra e ao produto.
 - **Cardinalidade Item da Compra × Produto Referência:** um item refere-se a exatamente um produto, e um produto pode aparecer em zero ou muitos itens. A primeira versão do desenho indicava "um ou muitos" no lado Produto Referência; a cardinalidade correta é "exatamente um".
 - **Em aberto (não alterado nesta revisão):** a obrigatoriedade das relações Contato → Tarefa e Cliente → Tarefa (uma tarefa pode existir sem contato de origem?) será confirmada quando chegarmos na entidade Tarefa.
