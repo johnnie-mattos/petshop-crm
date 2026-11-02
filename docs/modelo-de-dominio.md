@@ -16,7 +16,7 @@ erDiagram
     PRODUTO_REFERENCIA }o--o{ PROMOCAO : "participa de"
     CLIENTE ||--o{ CONTATO : "recebe"
     FUNCIONARIO |o--o{ CONTATO : "atende (opcional)"
-    CONTATO ||--o{ TAREFA : "pode gerar"
+    CONTATO |o--o{ TAREFA : "pode gerar (opcional)"
     FUNCIONARIO ||--o{ TAREFA : "executa"
     CLIENTE |o--o{ TAREFA : "relacionada a (opcional)"
 ```
