@@ -9,7 +9,7 @@
 - [ ] Login
 - [x] Banco de dados
   - [x] DER conceitual
-  - [ ] Dicionário de dados (modelo lógico) — em andamento (ver quadro "Andamento" em [dicionario-de-dados.md](dicionario-de-dados.md))
+  - [x] Dicionário de dados (modelo lógico) — ver [dicionario-de-dados.md](dicionario-de-dados.md)
   - [ ] Script SQL de criação das tabelas
 - [ ] API
 - [ ] Frontend
@@ -19,4 +19,4 @@
 - [ ] Dashboard
 - [ ] Relatórios
 
-> A quebra de "Banco de dados" em subitens foi uma sugestão de refinamento: reflete melhor o estágio atual (DER pronto, dicionário em construção, SQL ainda não iniciado) do que um único checkbox.
+> A quebra de "Banco de dados" em subitens foi uma sugestão de refinamento: reflete melhor o estágio atual (DER e dicionário prontos, SQL ainda não iniciado) do que um único checkbox.
