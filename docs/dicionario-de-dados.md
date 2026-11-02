@@ -50,7 +50,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 7. Compra *(depende de Cliente e Funcionário)*
 - [x] 8. Item da Compra *(depende de Compra e Produto Referência)*
 - [x] 9. Contato *(depende de Cliente e Funcionário)*
-- [ ] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
+- [x] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
 - [ ] 11. Dicionário consolidado
 
 ---
@@ -292,6 +292,42 @@ Acrescentar um valor não afeta os registros existentes. Remover um valor exige 
 
 ---
 
+## 10. Tarefa — tabela `tarefa`
+
+Atividade a ser executada por um funcionário (ex.: ligar para um cliente, enviar uma mensagem). Pode originar-se de um contato ou ser criada de forma independente, o que prepara o modelo para o planner. Relacionamentos do DER: **Funcionário 1:N Tarefa**, **Contato 1:N Tarefa** (opcional) e **Cliente 1:N Tarefa** (opcional).
+
+**Decisões de modelagem**
+
+- `funcionario_id` é obrigatória: toda tarefa tem um responsável. Usa `ON DELETE RESTRICT`.
+- `contato_id` é **opcional**, divergindo da primeira versão do DER (que indicava um contato obrigatório). Uma tarefa pode ser criada sem contato de origem; esse uso é previsto para o planner. Usa `ON DELETE RESTRICT`.
+- `cliente_id` é **opcional**: nem toda tarefa envolve um cliente (ex.: "conferir o encarte da semana"). Usa `ON DELETE RESTRICT`.
+- **Coerência entre `contato_id` e `cliente_id`:** quando uma tarefa é gerada a partir de um contato, `cliente_id` deve ser o mesmo cliente do contato. O banco não impõe essa regra (envolve duas tabelas); a aplicação a garante ao criar a tarefa a partir de um contato. As duas colunas são mantidas porque uma tarefa pode ter cliente sem ter contato.
+- `titulo` é obrigatório: é o que identifica a tarefa em listas e no planner.
+- `data_prevista` corresponde ao atributo `data` do DER e indica o **dia previsto para a execução**. É `DATE` e opcional: `NULL` indica tarefa sem data definida. O nome descritivo evita ambiguidade com os demais atributos `data`.
+- `concluida_em` (acrescentada) registra o instante da conclusão e permanece `NULL` enquanto a tarefa está pendente. O preenchimento é responsabilidade da aplicação, junto com `status`.
+- `status` é `NOT NULL` com `DEFAULT 'pendente'` e restrito por `CHECK` a uma lista fechada de valores. A lista pode ser alterada conforme descrito em [Alteração da lista de status](#alteração-da-lista-de-status) (Contato).
+- Eventual necessidade de horário no planner é atendida acrescentando uma coluna de hora ou convertendo `data_prevista` para `TIMESTAMPTZ`.
+
+| Valor de `status` | Significado |
+|---|---|
+| `pendente` | Tarefa a ser executada (estado inicial) |
+| `concluida` | Tarefa executada |
+| `cancelada` | Tarefa dispensada |
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Tarefa | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Tarefa | `funcionario_id` | BIGINT | Sim | FK → `funcionario.id` | `ON DELETE RESTRICT`; responsável pela tarefa |
+| Tarefa | `contato_id` | BIGINT | Não | FK → `contato.id` | `ON DELETE RESTRICT`; contato que originou a tarefa, quando houver |
+| Tarefa | `cliente_id` | BIGINT | Não | FK → `cliente.id` | `ON DELETE RESTRICT`; cliente envolvido, quando houver |
+| Tarefa | `titulo` | VARCHAR(150) | Sim | - | Descrição curta da tarefa |
+| Tarefa | `data_prevista` | DATE | Não | - | Dia previsto para execução; `NULL` = sem data (DER: `data`) |
+| Tarefa | `concluida_em` | TIMESTAMPTZ | Não | - | `NULL` enquanto pendente; instante da conclusão |
+| Tarefa | `status` | VARCHAR(20) | Sim | - | `DEFAULT 'pendente'`; `CHECK (status IN ('pendente', 'concluida', 'cancelada'))` |
+| Tarefa | `observacoes` | TEXT | Não | - | Anotações livres |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -305,5 +341,6 @@ Acrescentar um valor não afeta os registros existentes. Remover um valor exige 
 | 2026-10-28 | Promoção | Entidade registrada; `data_de_termino` e `percentual_de_desconto` opcionais; `ativa` definida como chave manual e vigência calculada | Permitir promoções sem término definido e não percentuais, evitando contradição entre `ativa` e as datas |
 | 2026-10-28 | Produto × Promoção | Tabela associativa registrada, com chave primária composta e sem atributos próprios | Representar o relacionamento N:N entre Produto Referência e Promoção |
 | 2026-10-28 | Compra | Entidade registrada; acrescentado `codigo_externo` (não previsto no DER); `data` renomeado para `data_da_compra` | Permitir a ligação e a deduplicação com as vendas do Open; evitar ambiguidade entre atributos `data` |
-| 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
 | 2026-10-29 | Item da Compra | Entidade registrada; `quantidade` fracionada; `desconto` como valor em reais já resolvido; `compra_id` com `ON DELETE CASCADE` (nova exceção na convenção) | Produtos vendidos por peso; descontos de origens variadas (percentual, valor fixo, condicional) reduzidos a um único valor; item é parte da compra |
+| 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
+| 2026-11-01 | Tarefa | Entidade registrada; `contato_id` e `cliente_id` opcionais (DER indicava `contato` obrigatório); `data` renomeado para `data_prevista`; acrescentado `concluida_em`; `status` restrito a lista (`pendente`, `concluida`, `cancelada`) | Tarefas independem de contato (uso futuro no planner) e nem sempre envolvem um cliente; distinguir o prazo do instante da conclusão; consultas dependem de valores padronizados de status |
