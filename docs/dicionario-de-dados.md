@@ -294,11 +294,11 @@ Acrescentar um valor não afeta os registros existentes. Remover um valor exige 
 
 ## 10. Tarefa — tabela `tarefa`
 
-Atividade a ser executada por um funcionário (ex.: ligar para um cliente, enviar uma mensagem). Pode originar-se de um contato ou ser criada de forma independente, o que prepara o modelo para o planner. Relacionamentos do DER: **Funcionário 1:N Tarefa**, **Contato 1:N Tarefa** (opcional) e **Cliente 1:N Tarefa** (opcional).
+Atividade a ser executada por um funcionário (ex.: ligar para um cliente, enviar uma mensagem). Pode originar-se de um contato ou ser criada de forma independente, o que prepara o modelo para o planner. Relacionamentos do DER: **Funcionário 1:N Tarefa** (opcional), **Contato 1:N Tarefa** (opcional) e **Cliente 1:N Tarefa** (opcional).
 
 **Decisões de modelagem**
 
-- `funcionario_id` é obrigatória: toda tarefa tem um responsável. Usa `ON DELETE RESTRICT`.
+- `funcionario_id` é **opcional**, divergindo da primeira versão do DER (que indicava exatamente um funcionário). Uma tarefa pode existir sem responsável definido (ex.: tarefa a ser atribuída depois); a coluna identifica o responsável quando houver. Usa `ON DELETE RESTRICT`.
 - `contato_id` é **opcional**, divergindo da primeira versão do DER (que indicava um contato obrigatório). Uma tarefa pode ser criada sem contato de origem; esse uso é previsto para o planner. Usa `ON DELETE RESTRICT`.
 - `cliente_id` é **opcional**: nem toda tarefa envolve um cliente (ex.: "conferir o encarte da semana"). Usa `ON DELETE RESTRICT`.
 - **Coerência entre `contato_id` e `cliente_id`:** quando uma tarefa é gerada a partir de um contato, `cliente_id` deve ser o mesmo cliente do contato. O banco não impõe essa regra (envolve duas tabelas); a aplicação a garante ao criar a tarefa a partir de um contato. As duas colunas são mantidas porque uma tarefa pode ter cliente sem ter contato.
@@ -317,7 +317,7 @@ Atividade a ser executada por um funcionário (ex.: ligar para um cliente, envia
 | Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
 |---|---|---|---|---|---|
 | Tarefa | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
-| Tarefa | `funcionario_id` | BIGINT | Sim | FK → `funcionario.id` | `ON DELETE RESTRICT`; responsável pela tarefa |
+| Tarefa | `funcionario_id` | BIGINT | Não | FK → `funcionario.id` | `ON DELETE RESTRICT`; responsável pela tarefa, quando houver |
 | Tarefa | `contato_id` | BIGINT | Não | FK → `contato.id` | `ON DELETE RESTRICT`; contato que originou a tarefa, quando houver |
 | Tarefa | `cliente_id` | BIGINT | Não | FK → `cliente.id` | `ON DELETE RESTRICT`; cliente envolvido, quando houver |
 | Tarefa | `titulo` | VARCHAR(150) | Sim | - | Descrição curta da tarefa |
@@ -343,4 +343,4 @@ Atividade a ser executada por um funcionário (ex.: ligar para um cliente, envia
 | 2026-10-28 | Compra | Entidade registrada; acrescentado `codigo_externo` (não previsto no DER); `data` renomeado para `data_da_compra` | Permitir a ligação e a deduplicação com as vendas do Open; evitar ambiguidade entre atributos `data` |
 | 2026-10-29 | Item da Compra | Entidade registrada; `quantidade` fracionada; `desconto` como valor em reais já resolvido; `compra_id` com `ON DELETE CASCADE` (nova exceção na convenção) | Produtos vendidos por peso; descontos de origens variadas (percentual, valor fixo, condicional) reduzidos a um único valor; item é parte da compra |
 | 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
-| 2026-11-01 | Tarefa | Entidade registrada; `contato_id` e `cliente_id` opcionais (DER indicava `contato` obrigatório); `data` renomeado para `data_prevista`; acrescentado `concluida_em`; `status` restrito a lista (`pendente`, `concluida`, `cancelada`) | Tarefas independem de contato (uso futuro no planner) e nem sempre envolvem um cliente; distinguir o prazo do instante da conclusão; consultas dependem de valores padronizados de status |
+| 2026-11-01 | Tarefa | Entidade registrada; `funcionario_id`, `contato_id` e `cliente_id` opcionais (DER indicava `funcionario` e `contato` obrigatórios); `data` renomeado para `data_prevista`; acrescentado `concluida_em`; `status` restrito a lista (`pendente`, `concluida`, `cancelada`) | Tarefas independem de contato (uso futuro no planner), podem não ter responsável definido e nem sempre envolvem um cliente; distinguir o prazo do instante da conclusão; consultas dependem de valores padronizados de status |
