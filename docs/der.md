@@ -28,6 +28,7 @@ erDiagram
         texto endereco
         texto observacoes
         data data_de_cadastro
+        logico ativo
     }
 
     PET {
@@ -125,6 +126,7 @@ erDiagram
 ## Notas
 
 - **O que mudou nesta versão:** entidade `Pet` e relacionamento Cliente 1:N Pet. Padronizado o nome `Tarefas` → `Tarefa` (singular, como as demais entidades). A relação Compra → Item da Compra passou a `|{` (um ou muitos), fiel ao DER original, em que uma compra sempre tem ao menos um item.
+- **Atributo `ativo` em Cliente (acrescentado):** indica se o cliente continua sendo atendido. Clientes inativos não geram contatos automáticos e permanecem no histórico. Não constava na primeira versão do DER.
 - **Atributos opcionais do Pet:** `nome`, `especie`, `raca`, `porte`, `data_de_nascimento` e `observacoes` são opcionais (ver [Requisitos](requisitos.md)). O DER conceitual não mostra obrigatoriedade; ela é registrada no [Dicionário de Dados](dicionario-de-dados.md).
 - **Relacionamento N:N (Produto Referência × Promoção):** no modelo lógico ele se transforma na tabela associativa `produto_promocao`, definida no [Dicionário de Dados](dicionario-de-dados.md). A primeira versão do desenho indicava "zero ou um" no lado Promoção; a cardinalidade correta é "zero ou muitos" nos dois lados, pois um produto pode participar de várias promoções ao longo do tempo.
 - **Atributo `codigo_externo` em Compra (acrescentado):** identificador da venda no sistema Open, que permite referenciar a venda de origem e evitar registros duplicados. Não constava na primeira versão do DER.
