@@ -17,7 +17,7 @@ erDiagram
     CLIENTE ||--o{ CONTATO : "recebe"
     FUNCIONARIO |o--o{ CONTATO : "atende (opcional)"
     CONTATO |o--o{ TAREFA : "pode gerar (opcional)"
-    FUNCIONARIO ||--o{ TAREFA : "executa"
+    FUNCIONARIO |o--o{ TAREFA : "executa (opcional)"
     CLIENTE |o--o{ TAREFA : "relacionada a (opcional)"
 
     CLIENTE {
@@ -119,7 +119,7 @@ erDiagram
 | Cliente | 1:N | Contato | Um cliente pode receber vários contatos. |
 | Funcionário | 1:N (opcional) | Contato | Um funcionário atende vários contatos; um contato pode ainda não ter funcionário (criado automaticamente). |
 | Contato | 1:N (opcional) | Tarefa | Um contato pode gerar várias tarefas; uma tarefa pode existir sem contato de origem. |
-| Funcionário | 1:N | Tarefa | Um funcionário executa várias tarefas. |
+| Funcionário | 1:N (opcional) | Tarefa | Um funcionário executa várias tarefas; uma tarefa pode ainda não ter responsável. |
 | Cliente | 1:N (opcional) | Tarefa | Uma tarefa pode, ou não, estar relacionada a um cliente. |
 
 ## Notas
@@ -131,7 +131,7 @@ erDiagram
 - **Funcionário opcional em Contato:** o contato é criado automaticamente pelas regras do sistema, sem responsável; o funcionário passa a ser registrado quando executa o contato. A primeira versão do desenho indicava exatamente um funcionário. Atributo `realizado_em` acrescentado (instante da execução); `data` indica o dia previsto do contato.
 - **Atributos `compra` e `produto` em Item da Compra:** no DER original eles já aparecem como atributos; no modelo lógico serão as chaves estrangeiras que ligam o item à compra e ao produto.
 - **Cardinalidade Item da Compra × Produto Referência:** um item refere-se a exatamente um produto, e um produto pode aparecer em zero ou muitos itens. A primeira versão do desenho indicava "um ou muitos" no lado Produto Referência; a cardinalidade correta é "exatamente um".
-- **Tarefa:** a relação com Contato é opcional (uma tarefa pode existir sem contato de origem, uso previsto no planner), assim como a relação com Cliente. A primeira versão do desenho ligava Contato e Tarefa com um losango (símbolo de composição), que não corresponde à regra de negócio ("o contato pode gerar uma tarefa") e foi substituído pela cardinalidade 1:N opcional. Atributo `concluida_em` acrescentado (instante da conclusão); `data` indica o dia previsto.
+- **Tarefa:** a relação com Funcionário também é opcional (tarefa sem responsável definido). A relação com Contato é opcional (uma tarefa pode existir sem contato de origem, uso previsto no planner), assim como a relação com Cliente. A primeira versão do desenho ligava Contato e Tarefa com um losango (símbolo de composição), que não corresponde à regra de negócio ("o contato pode gerar uma tarefa") e foi substituído pela cardinalidade 1:N opcional. Atributo `concluida_em` acrescentado (instante da conclusão); `data` indica o dia previsto.
 - **Imagem do diagrama:** [`der.png`](der.png) é uma imagem gerada a partir do diagrama deste arquivo, já com a entidade `Pet`. Se o diagrama mudar, este arquivo (`der.md`) é a referência: a imagem deve ser gerada de novo a partir dele.
 
 ![DER conceitual](der.png)

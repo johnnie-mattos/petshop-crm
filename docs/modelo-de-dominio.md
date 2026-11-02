@@ -17,7 +17,7 @@ erDiagram
     CLIENTE ||--o{ CONTATO : "recebe"
     FUNCIONARIO |o--o{ CONTATO : "atende (opcional)"
     CONTATO |o--o{ TAREFA : "pode gerar (opcional)"
-    FUNCIONARIO ||--o{ TAREFA : "executa"
+    FUNCIONARIO |o--o{ TAREFA : "executa (opcional)"
     CLIENTE |o--o{ TAREFA : "relacionada a (opcional)"
 ```
 
