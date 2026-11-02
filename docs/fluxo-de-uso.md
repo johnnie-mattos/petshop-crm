@@ -11,6 +11,8 @@
 
 ## Regra de geração de contato
 
+As regras consideram apenas clientes ativos.
+
 O diagrama abaixo usa a sintaxe [Mermaid](https://mermaid.js.org/), que o GitHub renderiza automaticamente como um fluxograma ao exibir este arquivo — não precisa exportar imagem.
 
 ```mermaid

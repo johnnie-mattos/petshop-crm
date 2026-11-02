@@ -2,7 +2,7 @@
 
 O sistema deve contar com:
 
-- **Cadastro de clientes**, incluindo nome e telefone;
+- **Cadastro de clientes**, incluindo nome e telefone. Clientes que deixam de ser atendidos, ou que não desejam ser contatados, são marcados como inativos (não excluídos) e deixam de gerar contatos automáticos;
 - **Cadastro de pets do cliente** — cada cliente pode ter zero, um ou vários pets cadastrados (ver detalhamento abaixo);
 - **Cadastro de produtos de referência** (catálogo consultivo: nome, categoria, marca, preço — sem controle de estoque, que continua no sistema Open);
 - **Encarte da semana**, exibindo produtos em promoção;
@@ -43,3 +43,4 @@ Planner integrado às demais funções, facilitando o planejamento semanal do at
 | 2026-10-24 | Entidade `Pet` incorporada ao modelo (relação 1:N com Cliente). Requisito "quantidade e nome dos pets" detalhado em "Cadastro de pets". Pendência anterior encerrada. |
 | 2026-10-24 | Espécie, raça, porte e data de nascimento do pet definidos como opcionais, para acomodar tutores com perfis diversos. |
 | 2026-10-25 | Nome do pet também definido como opcional: nenhum dado digitado do pet é obrigatório, para o cadastro não travar nenhum processo. |
+| 2026-11-01 | Cliente passa a ter situação (ativo/inativo); clientes inativos não geram contatos automáticos. |

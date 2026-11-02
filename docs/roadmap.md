@@ -7,7 +7,7 @@
 - [ ] Histórico de compras (com itens)
 - [ ] Tela de contatos
 - [ ] Login
-- [x] Banco de dados
+- [ ] Banco de dados
   - [x] DER conceitual
   - [x] Dicionário de dados (modelo lógico) — ver [dicionario-de-dados.md](dicionario-de-dados.md)
   - [ ] Script SQL de criação das tabelas
