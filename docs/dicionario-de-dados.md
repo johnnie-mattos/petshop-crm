@@ -23,7 +23,7 @@ Cada atributo é definido pela aplicação dos cinco critérios abaixo.
 - **Chave primária:** coluna `id` do tipo `BIGSERIAL`. Exceção: tabelas associativas (relacionamentos N:N sem atributos próprios) usam chave primária composta pelas duas chaves estrangeiras.
 - **Chave estrangeira:** nome da tabela referenciada + `_id`, tipo `BIGINT` (ex.: `cliente_id`). O tipo é `BIGINT` porque `BIGSERIAL` é um atalho para `BIGINT` com sequência automática.
 - **Coluna "Obrigatório":** `Sim` equivale a `NOT NULL`; `Não` aceita `NULL`.
-- **Desativação em vez de exclusão:** entidades que deixam de ser utilizadas (funcionário, pet, produto, promoção) possuem coluna booleana (`ativo`/`ativa`), preservando o histórico.
+- **Desativação em vez de exclusão:** entidades que deixam de ser utilizadas (cliente, funcionário, pet, produto, promoção) possuem coluna booleana (`ativo`/`ativa`), preservando o histórico.
 - **Integridade referencial:** chaves estrangeiras usam `ON DELETE RESTRICT`, que impede excluir um registro ainda referenciado por outro. Exceção: a chave estrangeira de uma entidade que é parte de outra, apontando para o todo (`item_da_compra.compra_id`), usa `ON DELETE CASCADE`, pois a parte não existe sem o todo.
 
 ## Glossário
@@ -64,6 +64,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - `cpf` é opcional e `UNIQUE`: nem todo cliente o informa, e não pode haver dois clientes com o mesmo CPF. Armazenado apenas com dígitos (11).
 - `endereco` é um campo único, conforme o DER.
 - `data_de_cadastro` é `TIMESTAMPTZ` com `DEFAULT CURRENT_TIMESTAMP`, preenchida pelo banco no `INSERT`.
+- `ativo` é `NOT NULL` com `DEFAULT TRUE`: o cliente que deixou de ser atendido, ou que não deseja ser contatado, é desativado, não excluído, preservando o histórico de compras, contatos e tarefas. Clientes inativos não geram contatos automáticos (regra da aplicação).
 
 | Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
 |---|---|---|---|---|---|
@@ -74,6 +75,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 | Cliente | `endereco` | TEXT | Não | - | Campo único, conforme DER |
 | Cliente | `observacoes` | TEXT | Não | - | Anotações livres da equipe |
 | Cliente | `data_de_cadastro` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+| Cliente | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir; inativo não gera contatos automáticos |
 
 > **Dados pessoais (LGPD):** `cpf`, `telefone` e `endereco` são dados pessoais. Exemplos, testes e arquivos deste repositório utilizam apenas dados fictícios.
 
@@ -358,6 +360,7 @@ Resumo das seções 1 a 10, na ordem de criação das tabelas. As decisões de m
 | Cliente | `endereco` | TEXT | Não | - | Campo único, conforme DER |
 | Cliente | `observacoes` | TEXT | Não | - | Anotações livres da equipe |
 | Cliente | `data_de_cadastro` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+| Cliente | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir; inativo não gera contatos automáticos |
 | Funcionário | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
 | Funcionário | `nome` | VARCHAR(150) | Sim | - | Nome completo |
 | Funcionário | `cargo` | VARCHAR(50) | Não | - | Texto livre (ex.: Atendente, Veterinário, Gerente) |
@@ -420,7 +423,7 @@ Resumo das seções 1 a 10, na ordem de criação das tabelas. As decisões de m
 | Tarefa | `status` | VARCHAR(20) | Sim | - | `DEFAULT 'pendente'`; `CHECK (status IN ('pendente', 'concluida', 'cancelada'))` |
 | Tarefa | `observacoes` | TEXT | Não | - | Anotações livres |
 
-Total: 10 tabelas e 68 colunas.
+Total: 10 tabelas e 69 colunas.
 
 ### Chaves estrangeiras
 
@@ -488,6 +491,7 @@ Regras que o banco não impõe e que a aplicação deve respeitar:
 
 - Toda compra possui ao menos um item: compra e itens são gravados na mesma transação.
 - O desconto de um item não excede o valor bruto do item; descontos em percentual ou condicionais são convertidos para valor em reais antes do registro.
+- A geração automática de contatos considera apenas clientes ativos (`cliente.ativo = TRUE`).
 - Em tarefas geradas a partir de um contato, `cliente_id` é o cliente do contato.
 - Ao executar um contato, são preenchidos `funcionario_id`, `realizado_em` e `status`. Ao concluir uma tarefa, `concluida_em` e `status`.
 - `atualizado_em` é atualizado nos `UPDATE` de `produto_referencia` e `compra`, pela aplicação ou por *trigger*.
@@ -502,7 +506,7 @@ Regras que o banco não impõe e que a aplicação deve respeitar:
 
 | # | Pendência | Descrição | Situação |
 |---|---|---|---|
-| 1 | Situação do cliente | `cliente` não possui indicador de situação (ativo/inativo), diferentemente de funcionário, pet, produto e promoção. Um cliente que deixou de ser atendido, ou que não deseja ser contatado, continua elegível às regras que criam contatos (ex.: 30 dias sem comprar). Definir se `cliente` recebe uma coluna `ativo` (ou equivalente) antes do script SQL. | Em aberto |
+| 1 | Situação do cliente | `cliente` recebeu a coluna `ativo` (`BOOLEAN NOT NULL DEFAULT TRUE`), igual às demais entidades desativáveis. Clientes inativos não geram contatos automáticos. | Resolvida em 2026-11-01 |
 | 2 | Autenticação (login) | O roadmap prevê login no MVP, mas o modelo não possui credenciais de acesso. Definir se `funcionario` recebe colunas de acesso ou se será criada uma tabela de usuário (1:1 com funcionário), na etapa de API e segurança. | Em aberto |
 
 ---
@@ -524,3 +528,4 @@ Regras que o banco não impõe e que a aplicação deve respeitar:
 | 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
 | 2026-11-01 | Tarefa | Entidade registrada; `funcionario_id`, `contato_id` e `cliente_id` opcionais (DER indicava `funcionario` e `contato` obrigatórios); `data` renomeado para `data_prevista`; acrescentado `concluida_em`; `status` restrito a lista (`pendente`, `concluida`, `cancelada`) | Tarefas independem de contato (uso futuro no planner), podem não ter responsável definido e nem sempre envolvem um cliente; distinguir o prazo do instante da conclusão; consultas dependem de valores padronizados de status |
 | 2026-11-01 | Dicionário consolidado | Seção 11 acrescentada: ordem de criação, tabela única de colunas, chaves estrangeiras, `CHECK`, `UNIQUE`, índices propostos, regras da aplicação, configuração de fuso horário e pendências | Reunir o modelo lógico como base do script SQL e registrar pontos identificados na revisão |
+| 2026-11-01 | Cliente | Acrescentado `ativo` (`BOOLEAN NOT NULL DEFAULT TRUE`); regra: clientes inativos não geram contatos automáticos | Cliente que deixou de ser atendido ou não deseja ser contatado continuaria elegível às regras de contato; desativar preserva o histórico |
