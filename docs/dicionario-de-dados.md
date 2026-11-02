@@ -51,7 +51,7 @@ As tabelas são registradas em ordem de dependência: uma chave estrangeira só 
 - [x] 8. Item da Compra *(depende de Compra e Produto Referência)*
 - [x] 9. Contato *(depende de Cliente e Funcionário)*
 - [x] 10. Tarefa *(depende de Funcionário, Contato e Cliente)*
-- [ ] 11. Dicionário consolidado
+- [x] 11. Dicionário consolidado
 
 ---
 
@@ -328,6 +328,185 @@ Atividade a ser executada por um funcionário (ex.: ligar para um cliente, envia
 
 ---
 
+## 11. Dicionário consolidado
+
+Resumo das seções 1 a 10, na ordem de criação das tabelas. As decisões de modelagem de cada entidade estão na respectiva seção; em caso de divergência, prevalece a seção da entidade.
+
+### Ordem de criação
+
+| # | Tabela | Depende de |
+|---|---|---|
+| 1 | `cliente` | - |
+| 2 | `funcionario` | - |
+| 3 | `produto_referencia` | - |
+| 4 | `promocao` | - |
+| 5 | `pet` | `cliente` |
+| 6 | `produto_promocao` | `produto_referencia`, `promocao` |
+| 7 | `compra` | `cliente`, `funcionario` |
+| 8 | `item_da_compra` | `compra`, `produto_referencia` |
+| 9 | `contato` | `cliente`, `funcionario` |
+| 10 | `tarefa` | `funcionario`, `contato`, `cliente` |
+
+### Todas as tabelas e colunas
+
+| Entidade | Atributo | Tipo | Obrigatório | Chave | Observação |
+|---|---|---|---|---|---|
+| Cliente | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Cliente | `nome` | VARCHAR(150) | Sim | - | Nome completo |
+| Cliente | `telefone` | VARCHAR(20) | Sim | - | Texto, para preservar `+55`, DDD e formatação |
+| Cliente | `cpf` | VARCHAR(11) | Não | UNIQUE | Só dígitos; único quando preenchido |
+| Cliente | `endereco` | TEXT | Não | - | Campo único, conforme DER |
+| Cliente | `observacoes` | TEXT | Não | - | Anotações livres da equipe |
+| Cliente | `data_de_cadastro` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+| Funcionário | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Funcionário | `nome` | VARCHAR(150) | Sim | - | Nome completo |
+| Funcionário | `cargo` | VARCHAR(50) | Não | - | Texto livre (ex.: Atendente, Veterinário, Gerente) |
+| Funcionário | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir |
+| Produto Referência | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Produto Referência | `nome` | VARCHAR(200) | Sim | - | Nome completo do produto |
+| Produto Referência | `categoria` | VARCHAR(80) | Não | - | Texto livre (ração, brinquedo, medicamento...) |
+| Produto Referência | `marca` | VARCHAR(80) | Não | - | Texto livre |
+| Produto Referência | `preco` | NUMERIC(10,2) | Não | - | Cópia de referência do preço do Open; `CHECK (preco >= 0)` |
+| Produto Referência | `codigo` | VARCHAR(50) | Sim | UNIQUE | Código do produto no Open; texto |
+| Produto Referência | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir |
+| Produto Referência | `atualizado_em` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+| Promoção | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Promoção | `nome` | VARCHAR(120) | Sim | - | Identifica a campanha (ex.: "Semana do Banho") |
+| Promoção | `data_de_inicio` | DATE | Sim | - | Primeiro dia de vigência |
+| Promoção | `data_de_termino` | DATE | Não | - | `NULL` = sem data de término definida; `CHECK (data_de_termino >= data_de_inicio)` |
+| Promoção | `descricao` | TEXT | Não | - | Detalhes da campanha |
+| Promoção | `percentual_de_desconto` | NUMERIC(5,2) | Não | - | `CHECK (percentual_de_desconto BETWEEN 0 AND 100)` |
+| Promoção | `ativa` | BOOLEAN | Sim | - | `DEFAULT TRUE`; chave manual de suspensão |
+| Pet | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Pet | `cliente_id` | BIGINT | Sim | FK → `cliente.id` | Tutor do pet; `ON DELETE RESTRICT`; preenchido pelo sistema |
+| Pet | `nome` | VARCHAR(100) | Não | - | Opcional |
+| Pet | `especie` | VARCHAR(50) | Não | - | Opcional (cachorro, gato, ave...) |
+| Pet | `raca` | VARCHAR(80) | Não | - | Opcional |
+| Pet | `porte` | VARCHAR(20) | Não | - | Opcional (pequeno, médio, grande) |
+| Pet | `data_de_nascimento` | DATE | Não | - | Opcional; pode ser data aproximada |
+| Pet | `observacoes` | TEXT | Não | - | Opcional (alergias, temperamento, cuidados) |
+| Pet | `ativo` | BOOLEAN | Sim | - | `DEFAULT TRUE`; desativar em vez de excluir |
+| Produto × Promoção | `produto_referencia_id` | BIGINT | Sim | PK composta; FK → `produto_referencia.id` | `ON DELETE RESTRICT` |
+| Produto × Promoção | `promocao_id` | BIGINT | Sim | PK composta; FK → `promocao.id` | `ON DELETE RESTRICT` |
+| Compra | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Compra | `cliente_id` | BIGINT | Sim | FK → `cliente.id` | `ON DELETE RESTRICT`; preenchido pelo sistema |
+| Compra | `funcionario_id` | BIGINT | Sim | FK → `funcionario.id` | `ON DELETE RESTRICT`; vendedor responsável |
+| Compra | `data_da_compra` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` (DER: `data`) |
+| Compra | `valor_total` | NUMERIC(10,2) | Sim | - | `CHECK (valor_total >= 0)`; total oficial da venda; preenchido pelo sistema |
+| Compra | `forma_de_pagamento` | VARCHAR(30) | Não | - | Texto livre (dinheiro, pix, cartão...) |
+| Compra | `codigo_externo` | VARCHAR(50) | Não | UNIQUE | Identificador da venda no Open |
+| Compra | `atualizado_em` | TIMESTAMPTZ | Sim | - | `DEFAULT CURRENT_TIMESTAMP` |
+| Item da Compra | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Item da Compra | `compra_id` | BIGINT | Sim | FK → `compra.id` | `ON DELETE CASCADE`; preenchido pelo sistema (DER: `compra`) |
+| Item da Compra | `produto_referencia_id` | BIGINT | Sim | FK → `produto_referencia.id` | `ON DELETE RESTRICT`; preenchido pelo sistema (DER: `produto`) |
+| Item da Compra | `quantidade` | NUMERIC(10,3) | Sim | - | `CHECK (quantidade > 0)`; aceita fração (ex.: 1,500 kg) |
+| Item da Compra | `valor_unitario` | NUMERIC(10,2) | Sim | - | `CHECK (valor_unitario >= 0)`; valor praticado por unidade na venda |
+| Item da Compra | `desconto` | NUMERIC(10,2) | Sim | - | `DEFAULT 0`; `CHECK (desconto >= 0)`; valor total do desconto do item, em reais |
+| Contato | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Contato | `cliente_id` | BIGINT | Sim | FK → `cliente.id` | `ON DELETE RESTRICT`; preenchido pelo sistema |
+| Contato | `funcionario_id` | BIGINT | Não | FK → `funcionario.id` | `ON DELETE RESTRICT`; `NULL` até a execução; identifica quem realizou o contato |
+| Contato | `data_do_contato` | DATE | Sim | - | `DEFAULT CURRENT_DATE`; dia em que o contato deve ser feito (DER: `data`) |
+| Contato | `realizado_em` | TIMESTAMPTZ | Não | - | `NULL` enquanto pendente; instante da execução |
+| Contato | `motivo` | VARCHAR(200) | Não | - | Ex.: "30 dias sem compra"; preenchido pelas regras |
+| Contato | `status` | VARCHAR(20) | Sim | - | `DEFAULT 'pendente'`; `CHECK (status IN ('pendente', 'realizado', 'nao_atendeu', 'cancelado'))` |
+| Contato | `observacoes` | TEXT | Não | - | Resultado da conversa, anotações |
+| Tarefa | `id` | BIGSERIAL | Sim | PK | Gerado automaticamente |
+| Tarefa | `funcionario_id` | BIGINT | Não | FK → `funcionario.id` | `ON DELETE RESTRICT`; responsável pela tarefa, quando houver |
+| Tarefa | `contato_id` | BIGINT | Não | FK → `contato.id` | `ON DELETE RESTRICT`; contato que originou a tarefa, quando houver |
+| Tarefa | `cliente_id` | BIGINT | Não | FK → `cliente.id` | `ON DELETE RESTRICT`; cliente envolvido, quando houver |
+| Tarefa | `titulo` | VARCHAR(150) | Sim | - | Descrição curta da tarefa |
+| Tarefa | `data_prevista` | DATE | Não | - | Dia previsto para execução; `NULL` = sem data (DER: `data`) |
+| Tarefa | `concluida_em` | TIMESTAMPTZ | Não | - | `NULL` enquanto pendente; instante da conclusão |
+| Tarefa | `status` | VARCHAR(20) | Sim | - | `DEFAULT 'pendente'`; `CHECK (status IN ('pendente', 'concluida', 'cancelada'))` |
+| Tarefa | `observacoes` | TEXT | Não | - | Anotações livres |
+
+Total: 10 tabelas e 68 colunas.
+
+### Chaves estrangeiras
+
+| Tabela | Coluna | Referencia | Obrigatória | `ON DELETE` |
+|---|---|---|---|---|
+| `pet` | `cliente_id` | `cliente.id` | Sim | `RESTRICT` |
+| `produto_promocao` | `produto_referencia_id` | `produto_referencia.id` | Sim | `RESTRICT` |
+| `produto_promocao` | `promocao_id` | `promocao.id` | Sim | `RESTRICT` |
+| `compra` | `cliente_id` | `cliente.id` | Sim | `RESTRICT` |
+| `compra` | `funcionario_id` | `funcionario.id` | Sim | `RESTRICT` |
+| `item_da_compra` | `compra_id` | `compra.id` | Sim | `CASCADE` |
+| `item_da_compra` | `produto_referencia_id` | `produto_referencia.id` | Sim | `RESTRICT` |
+| `contato` | `cliente_id` | `cliente.id` | Sim | `RESTRICT` |
+| `contato` | `funcionario_id` | `funcionario.id` | Não | `RESTRICT` |
+| `tarefa` | `funcionario_id` | `funcionario.id` | Não | `RESTRICT` |
+| `tarefa` | `contato_id` | `contato.id` | Não | `RESTRICT` |
+| `tarefa` | `cliente_id` | `cliente.id` | Não | `RESTRICT` |
+
+Total: 12 chaves estrangeiras.
+
+### Restrições `CHECK`
+
+| Tabela | Regra |
+|---|---|
+| `produto_referencia` | `CHECK (preco >= 0)` |
+| `promocao` | `CHECK (data_de_termino >= data_de_inicio)` |
+| `promocao` | `CHECK (percentual_de_desconto BETWEEN 0 AND 100)` |
+| `compra` | `CHECK (valor_total >= 0)` |
+| `item_da_compra` | `CHECK (quantidade > 0)` |
+| `item_da_compra` | `CHECK (valor_unitario >= 0)` |
+| `item_da_compra` | `CHECK (desconto >= 0)` |
+| `contato` | `CHECK (status IN ('pendente', 'realizado', 'nao_atendeu', 'cancelado'))` |
+| `tarefa` | `CHECK (status IN ('pendente', 'concluida', 'cancelada'))` |
+
+Total: 9 restrições `CHECK`.
+
+### Restrições `UNIQUE`
+
+| Tabela | Coluna |
+|---|---|
+| `cliente` | `cpf` |
+| `produto_referencia` | `codigo` |
+| `compra` | `codigo_externo` |
+
+### Índices propostos
+
+O PostgreSQL cria índices automaticamente para chaves primárias e restrições `UNIQUE`, mas não para chaves estrangeiras. Índices propostos para o script SQL (também aceleram a verificação de `ON DELETE RESTRICT`):
+
+| Tabela | Colunas | Finalidade |
+|---|---|---|
+| `pet` | `(cliente_id)` | Pets de um cliente |
+| `compra` | `(cliente_id, data_da_compra DESC)` | Histórico do cliente e data da última compra (regra "30 dias sem comprar") |
+| `compra` | `(funcionario_id)` | Vendas por vendedor |
+| `item_da_compra` | `(compra_id)` | Itens de uma compra |
+| `item_da_compra` | `(produto_referencia_id)` | Compras de um produto |
+| `produto_promocao` | `(promocao_id)` | Produtos de uma promoção (encarte); a chave primária composta já cobre a busca por produto |
+| `contato` | `(data_do_contato, status)` | Tela de contatos do dia |
+| `contato` | `(cliente_id)` | Contatos de um cliente |
+| `tarefa` | `(data_prevista, status)` | Tarefas do dia e da semana (planner) |
+| `tarefa` | `(funcionario_id)`, `(cliente_id)`, `(contato_id)` | Consulta por responsável, cliente e contato de origem |
+
+### Regras garantidas pela aplicação
+
+Regras que o banco não impõe e que a aplicação deve respeitar:
+
+- Toda compra possui ao menos um item: compra e itens são gravados na mesma transação.
+- O desconto de um item não excede o valor bruto do item; descontos em percentual ou condicionais são convertidos para valor em reais antes do registro.
+- Em tarefas geradas a partir de um contato, `cliente_id` é o cliente do contato.
+- Ao executar um contato, são preenchidos `funcionario_id`, `realizado_em` e `status`. Ao concluir uma tarefa, `concluida_em` e `status`.
+- `atualizado_em` é atualizado nos `UPDATE` de `produto_referencia` e `compra`, pela aplicação ou por *trigger*.
+- A vigência de uma promoção é calculada na consulta (`ativa = TRUE` e data atual dentro do período).
+- Os valores de `status` de `contato` e `tarefa` são mantidos iguais no banco e na aplicação.
+
+### Configuração do banco
+
+- **Fuso horário:** `contato.data_do_contato` usa `DEFAULT CURRENT_DATE`, que depende do fuso horário da sessão. O banco deve ser configurado com `timezone = 'America/Sao_Paulo'` para que o dia mude à meia-noite local. As colunas `TIMESTAMPTZ` armazenam o instante exato e não dependem dessa configuração para o armazenamento.
+
+### Pendências do modelo
+
+| # | Pendência | Descrição | Situação |
+|---|---|---|---|
+| 1 | Situação do cliente | `cliente` não possui indicador de situação (ativo/inativo), diferentemente de funcionário, pet, produto e promoção. Um cliente que deixou de ser atendido, ou que não deseja ser contatado, continua elegível às regras que criam contatos (ex.: 30 dias sem comprar). Definir se `cliente` recebe uma coluna `ativo` (ou equivalente) antes do script SQL. | Em aberto |
+| 2 | Autenticação (login) | O roadmap prevê login no MVP, mas o modelo não possui credenciais de acesso. Definir se `funcionario` recebe colunas de acesso ou se será criada uma tabela de usuário (1:1 com funcionário), na etapa de API e segurança. | Em aberto |
+
+---
+
 ## Histórico de revisões
 
 | Data | Entidade | Alteração | Motivo |
@@ -344,3 +523,4 @@ Atividade a ser executada por um funcionário (ex.: ligar para um cliente, envia
 | 2026-10-29 | Item da Compra | Entidade registrada; `quantidade` fracionada; `desconto` como valor em reais já resolvido; `compra_id` com `ON DELETE CASCADE` (nova exceção na convenção) | Produtos vendidos por peso; descontos de origens variadas (percentual, valor fixo, condicional) reduzidos a um único valor; item é parte da compra |
 | 2026-11-01 | Contato | Entidade registrada; `funcionario_id` opcional (DER indicava obrigatório); `data` renomeado para `data_do_contato`; acrescentado `realizado_em`; `status` restrito a lista (`pendente`, `realizado`, `nao_atendeu`, `cancelado`) | Contatos são criados automaticamente, sem responsável; distinguir o dia previsto do instante da execução; consultas dependem de valores padronizados de status |
 | 2026-11-01 | Tarefa | Entidade registrada; `funcionario_id`, `contato_id` e `cliente_id` opcionais (DER indicava `funcionario` e `contato` obrigatórios); `data` renomeado para `data_prevista`; acrescentado `concluida_em`; `status` restrito a lista (`pendente`, `concluida`, `cancelada`) | Tarefas independem de contato (uso futuro no planner), podem não ter responsável definido e nem sempre envolvem um cliente; distinguir o prazo do instante da conclusão; consultas dependem de valores padronizados de status |
+| 2026-11-01 | Dicionário consolidado | Seção 11 acrescentada: ordem de criação, tabela única de colunas, chaves estrangeiras, `CHECK`, `UNIQUE`, índices propostos, regras da aplicação, configuração de fuso horário e pendências | Reunir o modelo lógico como base do script SQL e registrar pontos identificados na revisão |
