@@ -5,8 +5,11 @@
 -- TODOS OS DADOS SÃO FICTÍCIOS. Nomes, telefones e CPFs não
 -- correspondem a pessoas reais (ver nota de LGPD no dicionário de dados).
 --
--- Pré-requisito: banco recém-criado com sql/001_criar_tabelas.sql.
+-- Pré-requisito: tabelas recém-criadas pela migração do Flyway
+-- (backend/src/main/resources/db/migration/V1__criar_tabelas.sql).
 -- Os identificadores (id) referenciados abaixo pressupõem tabelas vazias.
+-- Este script não é uma migração: não é executado pelo Flyway e não deve
+-- ser aplicado no banco de produção.
 --
 -- Execução (psql, conectado ao banco petshop_crm):
 --   \i 'D:/petshop-crm/sql/002_dados_ficticios.sql'

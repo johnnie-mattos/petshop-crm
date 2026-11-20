@@ -1,12 +1,13 @@
 -- =============================================================
--- 001_criar_tabelas.sql
--- Criação das tabelas do Pet Shop CRM (PostgreSQL 18).
+-- V1__criar_tabelas.sql
+-- Migração inicial: criação das tabelas do Pet Shop CRM (PostgreSQL 18).
 --
 -- Fonte: docs/dicionario-de-dados.md, seção 11 (Dicionário consolidado).
 -- Em caso de divergência, prevalece o dicionário de dados.
 --
--- Execução (psql, conectado ao banco petshop_crm):
---   \i 'D:/petshop-crm/sql/001_criar_tabelas.sql'
+-- Executada automaticamente pelo Flyway na inicialização do backend,
+-- dentro de uma transação. Migrações já aplicadas não devem ser editadas:
+-- alterações no modelo são feitas em uma nova migração (V2__..., V3__...).
 --
 -- Convenção de nomes das restrições (padrão do PostgreSQL):
 --   chave primária ....... <tabela>_pkey
@@ -17,20 +18,14 @@
 -- Restrições NOT NULL recebem do PostgreSQL o nome <tabela>_<coluna>_not_null.
 -- =============================================================
 
--- Interrompe a execução no primeiro erro.
-\set ON_ERROR_STOP on
--- O arquivo é salvo em UTF-8.
-\encoding UTF8
-
-BEGIN;
-
 -- -------------------------------------------------------------
 -- Configuração do banco
 -- -------------------------------------------------------------
 -- Fuso horário America/Sao_Paulo: CURRENT_DATE (contato.data_do_contato)
 -- muda à meia-noite local. A configuração vale para as conexões
--- abertas após a execução deste script.
-ALTER DATABASE petshop_crm SET timezone = 'America/Sao_Paulo';
+-- abertas após a execução desta migração.
+-- O placeholder flyway:database é substituído pelo Flyway pelo nome do banco conectado.
+ALTER DATABASE ${flyway:database} SET timezone = 'America/Sao_Paulo';
 
 -- -------------------------------------------------------------
 -- 1. cliente
@@ -266,4 +261,3 @@ CREATE INDEX tarefa_funcionario_id_idx ON tarefa (funcionario_id);
 CREATE INDEX tarefa_cliente_id_idx     ON tarefa (cliente_id);
 CREATE INDEX tarefa_contato_id_idx     ON tarefa (contato_id);
 
-COMMIT;
